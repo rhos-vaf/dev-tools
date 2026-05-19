@@ -329,6 +329,10 @@ enable_argocd: ## Enable ArgoCD instance with OpenStack health checks
 deploy_openstack_dependencies: clone_gitops ## Deploy OpenStack dependencies via ArgoCD (Cert-manager, MetalLB, NMState)
 	@bash scripts/deploy_openstack_dependencies.sh
 
+.PHONY: deploy_openstack_operator
+deploy_openstack_operator: clone_gitops ## Deploy OpenStack operator via ArgoCD
+	@bash scripts/deploy_openstack_operator.sh
+
 # ============================================================================
 # UTILITY
 # ============================================================================

@@ -333,6 +333,10 @@ deploy_openstack_dependencies: clone_gitops ## Deploy OpenStack dependencies via
 deploy_openstack_operator: clone_gitops ## Deploy OpenStack operator via ArgoCD
 	@bash scripts/deploy_openstack_operator.sh
 
+.PHONY: deploy_vault_secrets_operator
+deploy_vault_secrets_operator: clone_gitops ## Deploy Vault Secrets Operator via ArgoCD
+	@bash scripts/deploy_vault_secrets_operator.sh
+
 # ============================================================================
 # UTILITY
 # ============================================================================

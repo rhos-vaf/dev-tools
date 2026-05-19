@@ -44,6 +44,10 @@ SNO_DISABLED_IFACES ?=
 PULL_SECRET ?=
 BMC_CREDENTIALS_FILE ?=
 
+# LVM Storage Configuration
+SNO_LVM_DEVICE ?=
+SNO_LVM_DEVICE_CLASS ?= openstack
+
 # BMC Credentials - can be provided directly or fetched from Vault
 SNO_BMC_USERNAME ?=
 SNO_BMC_PASSWORD ?=
@@ -269,6 +273,14 @@ show_kubeconfig: ## Display kubeconfig location and access instructions
 	@echo "Or use:"
 	@echo "  oc --kubeconfig=$(shell pwd)/$(OUTPUT_DIR)/artifacts/agent-install/auth/kubeconfig get nodes"
 	@echo ""
+
+# ============================================================================
+# LVM STORAGE OPERATOR
+# ============================================================================
+
+.PHONY: install_lvm_operator
+install_lvm_operator: ## Install LVM Storage Operator and configure LVM device
+	@bash scripts/install_lvm_operator.sh
 
 # ============================================================================
 # UTILITY

@@ -1,0 +1,25 @@
+# Local configuration files (contains sensitive data)
+# Only sno.example.sh is tracked, all other .sh files are git-ignored
+configs/*.sh
+!configs/sno.example.sh
+
+# Output directories
+out/
+
+# Secrets - NEVER commit these!
+*.secret
+*.creds
+pull-secret
+secrets/
+**/secrets/
+~/secrets/
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

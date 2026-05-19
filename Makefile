@@ -48,6 +48,10 @@ BMC_CREDENTIALS_FILE ?=
 SNO_LVM_DEVICE ?=
 SNO_LVM_DEVICE_CLASS ?= openstack
 
+# GitOps Configuration
+GITOPS_REPO ?= https://github.com/openstack-k8s-operators/gitops.git
+GITOPS_DIR ?= out/gitops
+
 # BMC Credentials - can be provided directly or fetched from Vault
 SNO_BMC_USERNAME ?=
 SNO_BMC_PASSWORD ?=
@@ -281,6 +285,45 @@ show_kubeconfig: ## Display kubeconfig location and access instructions
 .PHONY: install_lvm_operator
 install_lvm_operator: ## Install LVM Storage Operator and configure LVM device
 	@bash scripts/install_lvm_operator.sh
+
+# ============================================================================
+# GITOPS OPERATOR
+# ============================================================================
+
+.PHONY: clone_gitops
+clone_gitops: ## Clone GitOps operator repository
+	@if [ ! -d "$(GITOPS_DIR)" ]; then \
+		echo "Cloning GitOps repository..."; \
+		git clone $(GITOPS_REPO) $(GITOPS_DIR); \
+	else \
+		echo "GitOps repository already cloned at $(GITOPS_DIR)"; \
+	fi
+
+.PHONY: install_gitops_operator
+install_gitops_operator: clone_gitops ## Install OpenShift GitOps Operator
+	@echo "Installing OpenShift GitOps Operator..."
+	@oc apply -k $(GITOPS_DIR)/openshift-gitops.deploy/subscribe/
+	@echo "Waiting for GitOps Operator to be ready..."
+	@until oc get deployment openshift-gitops-operator-controller-manager -n openshift-gitops-operator &>/dev/null; do \
+		echo "  Waiting for operator deployment..."; \
+		sleep 10; \
+	done
+	@oc wait --for=condition=Available=True -n openshift-gitops-operator deployment/openshift-gitops-operator-controller-manager --timeout=300s
+	@echo "✔ OpenShift GitOps Operator installed"
+
+.PHONY: enable_argocd
+enable_argocd: ## Enable ArgoCD instance with OpenStack health checks
+	@echo "Enabling ArgoCD with OpenStack integrations..."
+	@oc apply -k $(GITOPS_DIR)/openshift-gitops.deploy/enable/
+	@echo "Waiting for ArgoCD to be ready..."
+	@until oc get deployment openshift-gitops-server -n openshift-gitops &>/dev/null; do \
+		echo "  Waiting for ArgoCD deployment..."; \
+		sleep 10; \
+	done
+	@oc wait --for=condition=Available=True -n openshift-gitops deployment/openshift-gitops-server --timeout=300s
+	@echo "✔ ArgoCD enabled"
+	@echo ""
+	@echo "ArgoCD URL: https://$$(oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')"
 
 # ============================================================================
 # UTILITY

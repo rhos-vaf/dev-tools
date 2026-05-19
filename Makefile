@@ -325,6 +325,10 @@ enable_argocd: ## Enable ArgoCD instance with OpenStack health checks
 	@echo ""
 	@echo "ArgoCD URL: https://$$(oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')"
 
+.PHONY: deploy_openstack_dependencies
+deploy_openstack_dependencies: clone_gitops ## Deploy OpenStack dependencies via ArgoCD (Cert-manager, MetalLB, NMState)
+	@bash scripts/deploy_openstack_dependencies.sh
+
 # ============================================================================
 # UTILITY
 # ============================================================================

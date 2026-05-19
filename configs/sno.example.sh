@@ -36,9 +36,9 @@ export SNO_NODE_IFACE="eno12399np0"            # RHCOS network interface name
 # ============================================================================
 
 # Cluster Configuration
-export SNO_CLUSTER_NAME="ocp"
-export SNO_BASE_DOMAIN="example.com"
-export SNO_OPENSHIFT_VERSION="4.18.3"
+export SNO_CLUSTER_NAME="ocp"                      # Cluster name
+export SNO_BASE_DOMAIN="example.com"               # Base domain for cluster FQDN
+export SNO_OPENSHIFT_VERSION="4.18.41"             # OpenShift version (full version required, e.g., 4.18.41)
 
 # Network Configuration
 export SNO_MACHINE_NETWORK="192.168.10.0/24"
@@ -108,10 +108,10 @@ fi
 echo "✅ SNO configuration loaded from: ${BASH_SOURCE[0]}"
 echo ""
 echo "Configuration summary:"
-echo "  Cluster: ${SNO_CLUSTER_NAME}.${SNO_BASE_DOMAIN}"
-echo "  BMC Host: ${SNO_BMC_HOST}"
-echo "  Node IP: ${SNO_NODE_IP}"
-echo "  Node MAC: ${SNO_NODE_MAC}"
+echo "  OpenShift Version:   ${SNO_OPENSHIFT_VERSION}"
+echo "  Cluster:             ${SNO_CLUSTER_NAME}.${SNO_BASE_DOMAIN}"
+echo "  BMC Host:            ${SNO_BMC_HOST}"
+echo "  Node IP:             ${SNO_NODE_IP}"
 echo ""
 echo "To validate: make validate_config"
 echo "To deploy: make deploy_sno"

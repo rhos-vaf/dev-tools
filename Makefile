@@ -52,10 +52,22 @@ SNO_LVM_DEVICE_CLASS ?= openstack
 GITOPS_REPO ?= https://github.com/openstack-k8s-operators/gitops.git
 GITOPS_DIR ?= out/gitops
 
+# GitOps Tools Configuration
+GITOPS_TOOLS_REPO ?= https://github.com/rhos-vaf/gitops-tools.git
+GITOPS_TOOLS_DIR ?= out/gitops-tools
+
 # BMC Credentials - can be provided directly or fetched from Vault
 SNO_BMC_USERNAME ?=
 SNO_BMC_PASSWORD ?=
 VAULT_BMC_SECRET_PATH ?=
+
+# Vault AppRole Configuration - can be provided directly or fetched from Vault
+VAULT_APPROLE_ROLE_ID ?=
+VAULT_APPROLE_SECRET_ID ?=
+VAULT_APPROLE_PATH ?=
+
+# OpenStack Configuration
+OPENSTACK_NAMESPACE ?=
 
 # Internal Makefile paths (only these have defaults as they're not user config)
 CI_FRAMEWORK_DIR ?= out/ci-framework
@@ -336,6 +348,47 @@ deploy_openstack_operator: clone_gitops ## Deploy OpenStack operator via ArgoCD
 .PHONY: deploy_vault_secrets_operator
 deploy_vault_secrets_operator: clone_gitops ## Deploy Vault Secrets Operator via ArgoCD
 	@bash scripts/deploy_vault_secrets_operator.sh
+
+# ============================================================================
+# OPENSTACK VAULT INTEGRATION
+# ============================================================================
+
+.PHONY: clone_gitops_tools
+clone_gitops_tools: ## Clone GitOps tools repository
+	@if [ ! -d "$(GITOPS_TOOLS_DIR)" ]; then \
+		echo "Cloning GitOps tools repository..."; \
+		git clone $(GITOPS_TOOLS_REPO) $(GITOPS_TOOLS_DIR); \
+	else \
+		echo "GitOps tools repository already cloned at $(GITOPS_TOOLS_DIR)"; \
+	fi
+
+.PHONY: configure_vault_authentication
+configure_vault_authentication: clone_gitops_tools ## Configure Vault AppRole authentication for OpenStack namespace
+	@if [ -z "$(OPENSTACK_NAMESPACE)" ]; then \
+		echo "✗ Error: OPENSTACK_NAMESPACE not set"; \
+		echo "  Set it in your config file or via: make configure_vault_authentication OPENSTACK_NAMESPACE=rhoso1"; \
+		exit 1; \
+	fi
+	@if [ -n "$(VAULT_APPROLE_ROLE_ID)" ] && [ -n "$(VAULT_APPROLE_SECRET_ID)" ]; then \
+		echo "→ Using AppRole credentials from environment variables..."; \
+		ROLE_ID="$(VAULT_APPROLE_ROLE_ID)"; \
+		SECRET_ID="$(VAULT_APPROLE_SECRET_ID)"; \
+	elif [ -n "$(VAULT_APPROLE_PATH)" ] && command -v vault >/dev/null 2>&1; then \
+		echo "→ Fetching AppRole credentials from Vault path: $(VAULT_APPROLE_PATH)..."; \
+		ROLE_ID=$$(vault kv get -field=role_id $(VAULT_APPROLE_PATH)) || (echo "✗ Failed to fetch role_id from Vault" && exit 1); \
+		SECRET_ID=$$(vault kv get -field=secret_id $(VAULT_APPROLE_PATH)) || (echo "✗ Failed to fetch secret_id from Vault" && exit 1); \
+	else \
+		echo "✗ Error: AppRole credentials not provided"; \
+		echo "  Option 1: Set VAULT_APPROLE_ROLE_ID and VAULT_APPROLE_SECRET_ID"; \
+		echo "  Option 2: Set VAULT_APPROLE_PATH and ensure vault CLI is available"; \
+		exit 1; \
+	fi; \
+	echo "→ Configuring Vault AppRole authentication for namespace: $(OPENSTACK_NAMESPACE)..."; \
+	$(MAKE) -C $(GITOPS_TOOLS_DIR) setup_vault \
+		NAMESPACE=$(OPENSTACK_NAMESPACE) \
+		APPROLE_ROLE_ID=$$ROLE_ID \
+		APPROLE_SECRET_ID=$$SECRET_ID
+	@echo "✔ Vault AppRole authentication configured for namespace: $(OPENSTACK_NAMESPACE)"
 
 # ============================================================================
 # UTILITY

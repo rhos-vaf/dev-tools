@@ -54,6 +54,17 @@ export SNO_ROOT_DEVICE="/dev/sda"              # Or /dev/nvme0n1, etc.
 export PULL_SECRET="/path/to/pull-secret"
 export BMC_CREDENTIALS_FILE="/path/to/idrac_access.yaml"
 
+# Vault AppRole Configuration (for OpenStack namespace setup)
+# Option 1: Set directly
+# export VAULT_APPROLE_ROLE_ID="your-role-id"
+# export VAULT_APPROLE_SECRET_ID="your-secret-id"
+#
+# Option 2: Fetch from Vault (recommended)
+# export VAULT_APPROLE_PATH="your/vault/path/to/approle-credentials"
+
+# OpenStack Namespace Configuration
+# export OPENSTACK_NAMESPACE="openstack"
+
 # ============================================================================
 # ADVANCED OPTIONS (uncomment to use)
 # ============================================================================

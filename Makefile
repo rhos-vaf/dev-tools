@@ -87,8 +87,11 @@ define check_required_var
 	fi
 endef
 
+##@ 1. Validate Configuration
+
+# Validate that all required configuration variables are set and BMC credentials exist
 .PHONY: validate_config
-validate_config: ensure_bmc_credentials_file ## Validate that all required configuration variables are set
+validate_config: ensure_bmc_credentials_file ## Validate configuration before deployment
 	$(call check_required_var,SNO_BMC_HOST)
 	$(call check_required_var,SNO_NODE_MAC)
 	@if [ ! -f "$(PULL_SECRET)" ]; then \
@@ -107,10 +110,37 @@ validate_config: ensure_bmc_credentials_file ## Validate that all required confi
 	fi
 	@echo "✔ All required configuration variables are set"
 
+# Display all configuration variables and their current values
+.PHONY: show_config
+show_config: ## Display current configuration
+	@echo "=========================================="
+	@echo "SNO Configuration"
+	@echo "=========================================="
+	@echo "Cluster Name:        $(SNO_CLUSTER_NAME)"
+	@echo "Base Domain:         $(SNO_BASE_DOMAIN)"
+	@echo "OpenShift Version:   $(SNO_OPENSHIFT_VERSION)"
+	@echo ""
+	@echo "Node Configuration:"
+	@echo "  IP Address:        $(SNO_NODE_IP)"
+	@echo "  MAC Address:       $(SNO_NODE_MAC)"
+	@echo "  Network Interface: $(SNO_NODE_IFACE)"
+	@echo "  Machine Network:   $(SNO_MACHINE_NETWORK)"
+	@echo "  Root Device:       $(SNO_ROOT_DEVICE)"
+	@echo ""
+	@echo "BMC Configuration:"
+	@echo "  BMC Host:          $(SNO_BMC_HOST)"
+	@echo "  Credentials File:  $(BMC_CREDENTIALS_FILE)"
+	@echo ""
+	@echo "Paths:"
+	@echo "  Pull Secret:       $(PULL_SECRET)"
+	@echo "  Output Directory:  $(OUTPUT_DIR)"
+	@echo "=========================================="
+
 # validate_secrets removed - now handled by validate_config
 
+# Ensure BMC credentials file exists (create from environment variables or fetch from Vault)
 .PHONY: ensure_bmc_credentials_file
-ensure_bmc_credentials_file: ## Ensure BMC credentials file exists (create from env vars or Vault)
+ensure_bmc_credentials_file:
 	@if [ -z "$(BMC_CREDENTIALS_FILE)" ]; then \
 		BMC_FILE="$$(pwd)/secrets/idrac_access.yaml"; \
 	else \
@@ -121,8 +151,9 @@ ensure_bmc_credentials_file: ## Ensure BMC credentials file exists (create from 
 		$(MAKE) generate_bmc_credentials_file; \
 	fi
 
+# Generate BMC credentials YAML from environment variables or Vault
 .PHONY: generate_bmc_credentials_file
-generate_bmc_credentials_file: ## Generate BMC credentials YAML from environment or Vault
+generate_bmc_credentials_file:
 	@if [ -z "$(BMC_CREDENTIALS_FILE)" ]; then \
 		BMC_FILE="$$(pwd)/secrets/idrac_access.yaml"; \
 	else \
@@ -153,8 +184,9 @@ generate_bmc_credentials_file: ## Generate BMC credentials YAML from environment
 # PREPARATION
 # ============================================================================
 
+# Install required tools and dependencies (git, ansible, oc, nmstate, etc.)
 .PHONY: download_tools
-download_tools: ## Install required tools and dependencies
+download_tools:
 	@echo "Installing required packages..."
 	@sudo dnf -y install git ansible-core python3-pip podman nmstate tar
 	@echo "Installing required Ansible collections..."
@@ -166,8 +198,9 @@ download_tools: ## Install required tools and dependencies
 	fi
 	@echo "✔ Required tools installed"
 
+# Clone or update ci-framework repository for SNO deployment
 .PHONY: clone_ci_framework
-clone_ci_framework: ## Clone or update ci-framework repository
+clone_ci_framework:
 	@echo "Setting up ci-framework..."
 ifeq (,$(wildcard $(CI_FRAMEWORK_DIR)))
 	@git clone $(CI_FRAMEWORK_REPO) $(CI_FRAMEWORK_DIR)
@@ -177,8 +210,9 @@ else
 endif
 	@echo "✔ CI Framework ready at $(CI_FRAMEWORK_DIR)"
 
+# Generate Ansible variables and playbook for SNO deployment
 .PHONY: prepare_ansible_config
-prepare_ansible_config: validate_config ## Generate Ansible variables and playbook
+prepare_ansible_config: validate_config
 	@echo "Preparing Ansible configuration..."
 	@mkdir -p $(PLAYBOOK_DIR)
 	@$(MAKE) generate_vars_file
@@ -269,8 +303,9 @@ generate_playbook:
 	@echo "        name: bm_sno" >> $(PLAYBOOK_DIR)/playbook.yaml
 	@echo "✔ Generated $(PLAYBOOK_DIR)/playbook.yaml"
 
+# Generate ansible.cfg with roles path and settings
 .PHONY: generate_ansible_cfg
-generate_ansible_cfg: ## Generate ansible.cfg for the deployment
+generate_ansible_cfg:
 	@echo "Generating ansible.cfg..."
 	@echo "[defaults]" > $(PLAYBOOK_DIR)/ansible.cfg
 	@echo "roles_path = $$(realpath $(CI_FRAMEWORK_DIR))/roles" >> $(PLAYBOOK_DIR)/ansible.cfg
@@ -285,6 +320,9 @@ generate_ansible_cfg: ## Generate ansible.cfg for the deployment
 # DEPLOYMENT
 # ============================================================================
 
+##@ 2. Deploy Single Node OpenShift
+
+# Deploy Single Node OpenShift using agent-based installer via ci-framework
 .PHONY: deploy_sno
 deploy_sno: download_tools clone_ci_framework validate_config prepare_ansible_config generate_ansible_cfg ## Deploy Single Node OpenShift
 	@echo "Starting SNO deployment..."
@@ -295,6 +333,7 @@ deploy_sno: download_tools clone_ci_framework validate_config prepare_ansible_co
 	@echo "✔ SNO deployment completed"
 	@$(MAKE) show_kubeconfig
 
+# Display kubeconfig location and cluster access instructions
 .PHONY: show_kubeconfig
 show_kubeconfig: ## Display kubeconfig location and access instructions
 	@echo ""
@@ -313,6 +352,9 @@ show_kubeconfig: ## Display kubeconfig location and access instructions
 # LVM STORAGE OPERATOR
 # ============================================================================
 
+##@ 3. Deploy RHOSO
+
+# Install LVM Storage Operator and create LVMCluster with thin provisioning
 .PHONY: install_lvm_operator
 install_lvm_operator: ## Install LVM Storage Operator and configure LVM device
 	@bash scripts/install_lvm_operator.sh
@@ -321,8 +363,9 @@ install_lvm_operator: ## Install LVM Storage Operator and configure LVM device
 # GITOPS OPERATOR
 # ============================================================================
 
+# Clone openstack-k8s-operators/gitops repository for ArgoCD applications
 .PHONY: clone_gitops
-clone_gitops: ## Clone GitOps operator repository
+clone_gitops:
 	@if [ ! -d "$(GITOPS_DIR)" ]; then \
 		echo "Cloning GitOps repository..."; \
 		git clone $(GITOPS_REPO) $(GITOPS_DIR); \
@@ -330,8 +373,9 @@ clone_gitops: ## Clone GitOps operator repository
 		echo "GitOps repository already cloned at $(GITOPS_DIR)"; \
 	fi
 
+# Install OpenShift GitOps Operator subscription and wait for deployment
 .PHONY: install_gitops_operator
-install_gitops_operator: clone_gitops ## Install OpenShift GitOps Operator
+install_gitops_operator: clone_gitops ## Install OpenShift GitOps operator
 	@echo "Installing OpenShift GitOps Operator..."
 	@oc apply -k $(GITOPS_DIR)/openshift-gitops.deploy/subscribe/
 	@echo "Waiting for GitOps Operator to be ready..."
@@ -342,6 +386,7 @@ install_gitops_operator: clone_gitops ## Install OpenShift GitOps Operator
 	@oc wait --for=condition=Available=True -n openshift-gitops-operator deployment/openshift-gitops-operator-controller-manager --timeout=300s
 	@echo "✔ OpenShift GitOps Operator installed"
 
+# Enable ArgoCD instance with OpenStack custom resource health checks
 .PHONY: enable_argocd
 enable_argocd: ## Enable ArgoCD instance with OpenStack health checks
 	@echo "Enabling ArgoCD with OpenStack integrations..."
@@ -356,34 +401,40 @@ enable_argocd: ## Enable ArgoCD instance with OpenStack health checks
 	@echo ""
 	@echo "ArgoCD URL: https://$$(oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')"
 
+# Configure openshift-gitops with cluster-wide permissions and TLS certificates
 .PHONY: configure_openshift_gitops
-configure_openshift_gitops: clone_gitops_tools ## Configure openshift-gitops with cluster-wide permissions and TLS certificates
+configure_openshift_gitops: clone_gitops_tools ## Configure ArgoCD with cluster-wide permissions and TLS
 	@echo "Configuring openshift-gitops instance..."
 	@$(MAKE) -C $(GITOPS_TOOLS_DIR) configure_openshift_gitops
 	@echo "✔ openshift-gitops configured successfully"
 
+# Deploy OpenStack dependencies via ArgoCD: Cert-manager, MetalLB, and NMState operators
 .PHONY: deploy_openstack_dependencies
-deploy_openstack_dependencies: clone_gitops ## Deploy OpenStack dependencies via ArgoCD (Cert-manager, MetalLB, NMState)
+deploy_openstack_dependencies: clone_gitops ## Deploy OpenStack dependencies (Cert-manager, MetalLB, NMState)
 	@bash scripts/deploy_openstack_dependencies.sh
 
+# Deploy OpenStack operator from Red Hat Operator Hub via ArgoCD
 .PHONY: deploy_openstack_operator
-deploy_openstack_operator: clone_gitops ## Deploy OpenStack operator via ArgoCD
+deploy_openstack_operator: clone_gitops ## Deploy OpenStack operator
 	@bash scripts/deploy_openstack_operator.sh
 
+# Deploy OpenStack operator CR to bootstrap service operators
 .PHONY: deploy_openstack_operator_cr
-deploy_openstack_operator_cr: clone_gitops ## Deploy OpenStack operator CR to bootstrap service operators
+deploy_openstack_operator_cr: clone_gitops ## Deploy OpenStack operator CR to bootstrap services
 	@bash scripts/deploy_openstack_operator_cr.sh
 
+# Deploy Vault Secrets Operator via ArgoCD for secret management
 .PHONY: deploy_vault_secrets_operator
-deploy_vault_secrets_operator: clone_gitops ## Deploy Vault Secrets Operator via ArgoCD
+deploy_vault_secrets_operator: clone_gitops ## Deploy Vault Secrets Operator
 	@bash scripts/deploy_vault_secrets_operator.sh
 
 # ============================================================================
 # OPENSTACK VAULT INTEGRATION
 # ============================================================================
 
+# Clone gitops-tools repository for Vault and ArgoCD configuration
 .PHONY: clone_gitops_tools
-clone_gitops_tools: ## Clone GitOps tools repository
+clone_gitops_tools:
 	@if [ ! -d "$(GITOPS_TOOLS_DIR)" ]; then \
 		echo "Cloning GitOps tools repository..."; \
 		git clone $(GITOPS_TOOLS_REPO) $(GITOPS_TOOLS_DIR); \
@@ -391,8 +442,9 @@ clone_gitops_tools: ## Clone GitOps tools repository
 		echo "GitOps tools repository already cloned at $(GITOPS_TOOLS_DIR)"; \
 	fi
 
+# Configure Vault AppRole authentication for OpenStack namespace secret management
 .PHONY: configure_vault_authentication
-configure_vault_authentication: clone_gitops_tools ## Configure Vault AppRole authentication for OpenStack namespace
+configure_vault_authentication: clone_gitops_tools ## Configure Vault AppRole authentication
 	@if [ -z "$(OPENSTACK_NAMESPACE)" ]; then \
 		echo "✗ Error: OPENSTACK_NAMESPACE not set"; \
 		echo "  Set it in your config file or via: make configure_vault_authentication OPENSTACK_NAMESPACE=rhoso1"; \
@@ -423,33 +475,6 @@ configure_vault_authentication: clone_gitops_tools ## Configure Vault AppRole au
 # UTILITY
 # ============================================================================
 
-.PHONY: show_config
-show_config: ## Display current configuration
-	@echo "=========================================="
-	@echo "SNO Configuration"
-	@echo "=========================================="
-	@echo "Cluster Name:        $(SNO_CLUSTER_NAME)"
-	@echo "Base Domain:         $(SNO_BASE_DOMAIN)"
-	@echo "OpenShift Version:   $(SNO_OPENSHIFT_VERSION)"
-	@echo ""
-	@echo "Network Configuration:"
-	@echo "  Machine Network:   $(SNO_MACHINE_NETWORK)"
-	@echo "  Node IP:           $(SNO_NODE_IP)"
-	@echo "  Node Interface:    $(SNO_NODE_IFACE)"
-	@echo ""
-	@echo "BMC Configuration:"
-	@echo "  BMC Host:          $(SNO_BMC_HOST)"
-	@echo "  Credentials File:  $(BMC_CREDENTIALS_FILE)"
-	@echo ""
-	@echo "Node Configuration:"
-	@echo "  MAC Address:       $(SNO_NODE_MAC)"
-	@echo "  Root Device:       $(SNO_ROOT_DEVICE)"
-	@echo ""
-	@echo "Paths:"
-	@echo "  Pull Secret:       $(PULL_SECRET)"
-	@echo "  Output Directory:  $(OUTPUT_DIR)"
-	@echo "=========================================="
-
 # setup_config, create_config_template, and create_bmc_credentials_template removed
 # New simplified workflow:
 #   1. cp configs/sno.example.sh configs/sno.local.sh
@@ -458,47 +483,18 @@ show_config: ## Display current configuration
 # BMC credentials auto-fetched from Vault or set via SNO_BMC_USERNAME/PASSWORD
 
 .PHONY: help
-help: ## Display this help
+help:
 	@echo ""
-	@echo "SNO (Single Node OpenShift) Deployment Makefile"
+	@echo "SNO (Single Node OpenShift) and RHOSO Deployment Makefile"
 	@echo ""
-	@echo "Quick Start:"
-	@echo "  1. make download_tools clone_ci_framework"
-	@echo "  2. Set environment variables (see Configuration section below)"
-	@echo "  3. make deploy_sno"
+	@echo "Setup:"
+	@echo "  1. cp configs/sno.example.sh configs/sno.local.sh"
+	@echo "  2. vi configs/sno.local.sh  # Configure your deployment"
+	@echo "  3. source configs/sno.local.sh"
 	@echo ""
-	@echo "Note: BMC credentials auto-fetched from Vault ($(VAULT_BMC_SECRET_PATH))"
+	@echo "Note: BMC credentials auto-fetched from Vault if not set in environment"
 	@echo ""
-	@awk 'BEGIN {FS = ":.*##"; printf "Usage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-28s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
-	@echo ""
-	@echo "Configuration (choose one method):"
-	@echo ""
-	@echo "  Method 1 - Direct environment variables (simplest):"
-	@echo "    export SNO_BMC_HOST=idrac.example.com"
-	@echo "    export SNO_NODE_MAC=b0:7b:25:xx:yy:zz"
-	@echo "    export SNO_NODE_IP=192.168.10.50"
-	@echo "    export SNO_NODE_IFACE=eno12399np0"
-	@echo "    make deploy_sno"
-	@echo ""
-	@echo "  Method 2 - Config file (for repeated deployments):"
-	@echo "    cp configs/sno.example.sh configs/sno.local.sh"
-	@echo "    vi configs/sno.local.sh"
-	@echo "    source configs/sno.local.sh && make deploy_sno"
-	@echo ""
-	@echo "  Method 3 - Command-line (for CI/CD):"
-	@echo "    make deploy_sno SNO_BMC_HOST=... SNO_NODE_MAC=... SNO_NODE_IP=..."
-	@echo ""
-	@echo "  Required variables:"
-	@echo "    SNO_BMC_HOST, SNO_NODE_MAC, SNO_NODE_IP, SNO_NODE_IFACE"
-	@echo ""
-	@echo "  See configs/sno.example.sh for all available options and defaults"
-	@echo ""
-	@echo "Example:"
-	@echo '  make deploy_sno \\'
-	@echo '    SNO_BMC_HOST=idrac.example.com \\'
-	@echo '    SNO_NODE_MAC=b0:7b:25:xx:yy:zz \\'
-	@echo '    SNO_NODE_IP=192.168.10.50 \\'
-	@echo '    SNO_NODE_IFACE=eno12399np0'
+	@awk 'BEGIN {FS = ":.*##"; printf "Usage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-35s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 	@echo ""
 
 .DEFAULT_GOAL := help

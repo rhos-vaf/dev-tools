@@ -95,8 +95,13 @@ validate_config: ensure_bmc_credentials_file ## Validate that all required confi
 		echo "Error: Pull secret not found at $(PULL_SECRET)"; \
 		exit 1; \
 	fi
-	@if [ ! -f "$(BMC_CREDENTIALS_FILE)" ]; then \
-		echo "Error: BMC credentials file not found at $(BMC_CREDENTIALS_FILE)"; \
+	@if [ -z "$(BMC_CREDENTIALS_FILE)" ]; then \
+		BMC_FILE="$$(pwd)/secrets/idrac_access.yaml"; \
+	else \
+		BMC_FILE="$(BMC_CREDENTIALS_FILE)"; \
+	fi; \
+	if [ ! -f "$$BMC_FILE" ]; then \
+		echo "Error: BMC credentials file not found at $$BMC_FILE"; \
 		echo "This should have been generated automatically - something went wrong"; \
 		exit 1; \
 	fi
@@ -106,28 +111,38 @@ validate_config: ensure_bmc_credentials_file ## Validate that all required confi
 
 .PHONY: ensure_bmc_credentials_file
 ensure_bmc_credentials_file: ## Ensure BMC credentials file exists (create from env vars or Vault)
-	@if [ ! -f "$(BMC_CREDENTIALS_FILE)" ]; then \
+	@if [ -z "$(BMC_CREDENTIALS_FILE)" ]; then \
+		BMC_FILE="$$(pwd)/secrets/idrac_access.yaml"; \
+	else \
+		BMC_FILE="$(BMC_CREDENTIALS_FILE)"; \
+	fi; \
+	if [ ! -f "$$BMC_FILE" ]; then \
 		echo "→ BMC credentials file not found, generating..."; \
 		$(MAKE) generate_bmc_credentials_file; \
 	fi
 
 .PHONY: generate_bmc_credentials_file
 generate_bmc_credentials_file: ## Generate BMC credentials YAML from environment or Vault
-	@mkdir -p $$(dirname $(BMC_CREDENTIALS_FILE))
-	@if [ -n "$(SNO_BMC_USERNAME)" ] && [ -n "$(SNO_BMC_PASSWORD)" ]; then \
+	@if [ -z "$(BMC_CREDENTIALS_FILE)" ]; then \
+		BMC_FILE="$$(pwd)/secrets/idrac_access.yaml"; \
+	else \
+		BMC_FILE="$(BMC_CREDENTIALS_FILE)"; \
+	fi; \
+	mkdir -p $$(dirname $$BMC_FILE); \
+	if [ -n "$(SNO_BMC_USERNAME)" ] && [ -n "$(SNO_BMC_PASSWORD)" ]; then \
 		echo "→ Generating BMC credentials file from environment variables..."; \
-		echo "---" > $(BMC_CREDENTIALS_FILE); \
-		echo "username: $(SNO_BMC_USERNAME)" >> $(BMC_CREDENTIALS_FILE); \
-		echo "password: $(SNO_BMC_PASSWORD)" >> $(BMC_CREDENTIALS_FILE); \
-		chmod 600 $(BMC_CREDENTIALS_FILE); \
-		echo "✔ BMC credentials saved to $(BMC_CREDENTIALS_FILE)"; \
+		echo "---" > $$BMC_FILE; \
+		echo "username: $(SNO_BMC_USERNAME)" >> $$BMC_FILE; \
+		echo "password: $(SNO_BMC_PASSWORD)" >> $$BMC_FILE; \
+		chmod 600 $$BMC_FILE; \
+		echo "✔ BMC credentials saved to $$BMC_FILE"; \
 	elif command -v vault >/dev/null 2>&1; then \
 		echo "→ BMC credentials not in environment, fetching from Vault..."; \
 		vault kv get -format=json $(VAULT_BMC_SECRET_PATH) | \
 			jq -r '.data.data | "---\nusername: \(.username)\npassword: \(.password)"' \
-			> $(BMC_CREDENTIALS_FILE) || (echo "✗ Failed to fetch from Vault" && exit 1); \
-		chmod 600 $(BMC_CREDENTIALS_FILE); \
-		echo "✔ BMC credentials fetched from Vault and saved to $(BMC_CREDENTIALS_FILE)"; \
+			> $$BMC_FILE || (echo "✗ Failed to fetch from Vault" && exit 1); \
+		chmod 600 $$BMC_FILE; \
+		echo "✔ BMC credentials fetched from Vault and saved to $$BMC_FILE"; \
 	else \
 		echo "✗ Error: BMC credentials not provided and Vault not available"; \
 		echo "  Set SNO_BMC_USERNAME and SNO_BMC_PASSWORD, or install Vault CLI"; \
@@ -202,7 +217,11 @@ generate_vars_file:
 	@echo "" >> $(PLAYBOOK_DIR)/vars.yaml
 	@echo "# Secrets" >> $(PLAYBOOK_DIR)/vars.yaml
 	@echo "cifmw_manage_secrets_pullsecret_file: $$(realpath $(PULL_SECRET))" >> $(PLAYBOOK_DIR)/vars.yaml
-	@echo "cifmw_bmc_credentials_file: $$(realpath $(BMC_CREDENTIALS_FILE))" >> $(PLAYBOOK_DIR)/vars.yaml
+	@if [ -z "$(BMC_CREDENTIALS_FILE)" ]; then \
+		echo "cifmw_bmc_credentials_file: $$(realpath $$(pwd)/secrets/idrac_access.yaml)" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	else \
+		echo "cifmw_bmc_credentials_file: $$(realpath $(BMC_CREDENTIALS_FILE))" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	fi
 	@echo "" >> $(PLAYBOOK_DIR)/vars.yaml
 	@echo "# Optional configurations" >> $(PLAYBOOK_DIR)/vars.yaml
 	@if [ -n "$(SNO_ISO_HTTP_PORT)" ]; then \

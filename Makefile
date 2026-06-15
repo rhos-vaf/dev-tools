@@ -34,6 +34,7 @@ SNO_NODE_MAC ?=
 SNO_ROOT_DEVICE ?=
 SNO_RELEASE_IMAGE ?=
 SNO_ISO_HTTP_PORT ?=
+SNO_ISO_SERVER_IP ?=
 SNO_CONTROLLER_IP ?=
 SNO_INSTALLER_TIMEOUT ?=
 SNO_ENABLE_USB_BOOT ?=
@@ -266,6 +267,9 @@ generate_vars_file:
 	@echo "# Optional configurations" >> $(PLAYBOOK_DIR)/vars.yaml
 	@if [ -n "$(SNO_ISO_HTTP_PORT)" ]; then \
 		echo "cifmw_bm_agent_iso_http_port: $(SNO_ISO_HTTP_PORT)" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	fi
+	@if [ -n "$(SNO_ISO_SERVER_IP)" ]; then \
+		echo "cifmw_bm_agent_iso_server_ip: $(SNO_ISO_SERVER_IP)" >> $(PLAYBOOK_DIR)/vars.yaml; \
 	fi
 	@if [ -n "$(SNO_INSTALLER_TIMEOUT)" ]; then \
 		echo "cifmw_bm_agent_installer_timeout: $(SNO_INSTALLER_TIMEOUT)" >> $(PLAYBOOK_DIR)/vars.yaml; \

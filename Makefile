@@ -48,6 +48,12 @@ BMC_CREDENTIALS_FILE ?=
 SNO_LVM_DEVICE ?=
 SNO_LVM_DEVICE_CLASS ?= openstack
 
+# LVMS partition carved from the root disk at install time via cifmw_bm_agent_lvms_partition.
+# Leave SNO_LVMS_PARTITION_DEVICE empty to opt out (use a separate disk instead).
+SNO_LVMS_PARTITION_DEVICE ?=
+SNO_LVMS_ROOTFS_MIB ?= 150000
+SNO_LVMS_SIZE_MIB ?= 0
+
 # GitOps Configuration
 GITOPS_REPO ?= https://github.com/openstack-k8s-operators/gitops.git
 GITOPS_DIR ?= out/gitops
@@ -278,6 +284,12 @@ generate_vars_file:
 	fi
 	@if [ -n "$(SNO_DISABLED_IFACES)" ]; then \
 		echo "cifmw_bm_agent_disabled_ifaces: $(SNO_DISABLED_IFACES)" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	fi
+	@if [ -n "$(SNO_LVMS_PARTITION_DEVICE)" ]; then \
+		printf 'cifmw_bm_agent_lvms_partition:\n  device: "%s"\n  rootfs_mib: %s\n  size_mib: %s\n  label: lvmstorage\n' \
+			"$(SNO_LVMS_PARTITION_DEVICE)" \
+			"$(SNO_LVMS_ROOTFS_MIB)" \
+			"$(SNO_LVMS_SIZE_MIB)" >> $(PLAYBOOK_DIR)/vars.yaml; \
 	fi
 	@echo "✔ Generated $(PLAYBOOK_DIR)/vars.yaml"
 

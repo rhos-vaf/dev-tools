@@ -35,10 +35,12 @@ SNO_ROOT_DEVICE ?=
 SNO_RELEASE_IMAGE ?=
 SNO_ISO_HTTP_PORT ?=
 SNO_ISO_SERVER_IP ?=
+SNO_REUSE_VMEDIA ?=
 SNO_CONTROLLER_IP ?=
 SNO_INSTALLER_TIMEOUT ?=
 SNO_ENABLE_USB_BOOT ?=
 SNO_VMEDIA_UEFI_PATH ?=
+SNO_BIOS_ONETIMEBOOT_FQDD ?=
 SNO_CORE_PASSWORD ?=
 SNO_LIVE_DEBUG ?=
 SNO_DISABLED_IFACES ?=
@@ -271,6 +273,9 @@ generate_vars_file:
 	@if [ -n "$(SNO_ISO_SERVER_IP)" ]; then \
 		echo "cifmw_bm_agent_iso_server_ip: $(SNO_ISO_SERVER_IP)" >> $(PLAYBOOK_DIR)/vars.yaml; \
 	fi
+	@if [ -n "$(SNO_REUSE_VMEDIA)" ]; then \
+		echo "cifmw_bm_agent_reuse_vmedia: $(SNO_REUSE_VMEDIA)" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	fi
 	@if [ -n "$(SNO_INSTALLER_TIMEOUT)" ]; then \
 		echo "cifmw_bm_agent_installer_timeout: $(SNO_INSTALLER_TIMEOUT)" >> $(PLAYBOOK_DIR)/vars.yaml; \
 	fi
@@ -282,6 +287,9 @@ generate_vars_file:
 	fi
 	@if [ -n "$(SNO_VMEDIA_UEFI_PATH)" ]; then \
 		echo "cifmw_bm_agent_vmedia_uefi_path: $(SNO_VMEDIA_UEFI_PATH)" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	fi
+	@if [ -n "$(SNO_BIOS_ONETIMEBOOT_FQDD)" ]; then \
+		echo "cifmw_bm_agent_bios_onetimeboot_fqdd: $(SNO_BIOS_ONETIMEBOOT_FQDD)" >> $(PLAYBOOK_DIR)/vars.yaml; \
 	fi
 	@if [ -n "$(SNO_CORE_PASSWORD)" ]; then \
 		echo "cifmw_bm_agent_core_password: $(SNO_CORE_PASSWORD)" >> $(PLAYBOOK_DIR)/vars.yaml; \

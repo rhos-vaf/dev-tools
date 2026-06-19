@@ -249,6 +249,15 @@ generate_vars_file:
 	@echo 'cifmw_bm_agent_machine_network: "$(SNO_MACHINE_NETWORK)"' >> $(PLAYBOOK_DIR)/vars.yaml
 	@echo 'cifmw_bm_agent_node_ip: "$(SNO_NODE_IP)"' >> $(PLAYBOOK_DIR)/vars.yaml
 	@echo "cifmw_bm_agent_node_iface: $(SNO_NODE_IFACE)" >> $(PLAYBOOK_DIR)/vars.yaml
+	@if [ -n "$(SNO_NODE_VLAN)" ] && [ "$(SNO_NODE_VLAN)" != "0" ]; then \
+		echo "cifmw_bm_agent_node_vlan: $(SNO_NODE_VLAN)" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	fi
+	@if [ -n "$(SNO_NTP_SOURCES)" ]; then \
+		echo "cifmw_bm_agent_additional_ntp_sources:" >> $(PLAYBOOK_DIR)/vars.yaml; \
+		for src in $(SNO_NTP_SOURCES); do \
+			echo "  - $$src" >> $(PLAYBOOK_DIR)/vars.yaml; \
+		done; \
+	fi
 	@echo "" >> $(PLAYBOOK_DIR)/vars.yaml
 	@echo "# BMC configuration" >> $(PLAYBOOK_DIR)/vars.yaml
 	@echo "cifmw_bm_agent_bmc_host: $(SNO_BMC_HOST)" >> $(PLAYBOOK_DIR)/vars.yaml

@@ -71,6 +71,7 @@ spec:
   storage:
     deviceClasses:
     - name: ${SNO_LVM_DEVICE_CLASS}
+      default: true
       thinPoolConfig:
         name: thin-pool-1
         sizePercent: 90

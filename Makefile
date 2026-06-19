@@ -34,10 +34,13 @@ SNO_NODE_MAC ?=
 SNO_ROOT_DEVICE ?=
 SNO_RELEASE_IMAGE ?=
 SNO_ISO_HTTP_PORT ?=
+SNO_ISO_SERVER_IP ?=
+SNO_REUSE_VMEDIA ?=
 SNO_CONTROLLER_IP ?=
 SNO_INSTALLER_TIMEOUT ?=
 SNO_ENABLE_USB_BOOT ?=
 SNO_VMEDIA_UEFI_PATH ?=
+SNO_BIOS_ONETIMEBOOT_FQDD ?=
 SNO_CORE_PASSWORD ?=
 SNO_LIVE_DEBUG ?=
 SNO_DISABLED_IFACES ?=
@@ -47,6 +50,12 @@ BMC_CREDENTIALS_FILE ?=
 # LVM Storage Configuration
 SNO_LVM_DEVICE ?=
 SNO_LVM_DEVICE_CLASS ?= openstack
+
+# LVMS partition carved from the root disk at install time via cifmw_bm_agent_lvms_partition.
+# Leave SNO_LVMS_PARTITION_DEVICE empty to opt out (use a separate disk instead).
+SNO_LVMS_PARTITION_DEVICE ?=
+SNO_LVMS_ROOTFS_MIB ?= 150000
+SNO_LVMS_SIZE_MIB ?= 0
 
 # GitOps Configuration
 GITOPS_REPO ?= https://github.com/openstack-k8s-operators/gitops.git
@@ -261,6 +270,12 @@ generate_vars_file:
 	@if [ -n "$(SNO_ISO_HTTP_PORT)" ]; then \
 		echo "cifmw_bm_agent_iso_http_port: $(SNO_ISO_HTTP_PORT)" >> $(PLAYBOOK_DIR)/vars.yaml; \
 	fi
+	@if [ -n "$(SNO_ISO_SERVER_IP)" ]; then \
+		echo "cifmw_bm_agent_iso_server_ip: $(SNO_ISO_SERVER_IP)" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	fi
+	@if [ -n "$(SNO_REUSE_VMEDIA)" ]; then \
+		echo "cifmw_bm_agent_reuse_vmedia: $(SNO_REUSE_VMEDIA)" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	fi
 	@if [ -n "$(SNO_INSTALLER_TIMEOUT)" ]; then \
 		echo "cifmw_bm_agent_installer_timeout: $(SNO_INSTALLER_TIMEOUT)" >> $(PLAYBOOK_DIR)/vars.yaml; \
 	fi
@@ -273,11 +288,20 @@ generate_vars_file:
 	@if [ -n "$(SNO_VMEDIA_UEFI_PATH)" ]; then \
 		echo "cifmw_bm_agent_vmedia_uefi_path: $(SNO_VMEDIA_UEFI_PATH)" >> $(PLAYBOOK_DIR)/vars.yaml; \
 	fi
+	@if [ -n "$(SNO_BIOS_ONETIMEBOOT_FQDD)" ]; then \
+		echo "cifmw_bm_agent_bios_onetimeboot_fqdd: $(SNO_BIOS_ONETIMEBOOT_FQDD)" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	fi
 	@if [ -n "$(SNO_CORE_PASSWORD)" ]; then \
 		echo "cifmw_bm_agent_core_password: $(SNO_CORE_PASSWORD)" >> $(PLAYBOOK_DIR)/vars.yaml; \
 	fi
 	@if [ -n "$(SNO_DISABLED_IFACES)" ]; then \
 		echo "cifmw_bm_agent_disabled_ifaces: $(SNO_DISABLED_IFACES)" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	fi
+	@if [ -n "$(SNO_LVMS_PARTITION_DEVICE)" ]; then \
+		printf 'cifmw_bm_agent_lvms_partition:\n  device: "%s"\n  rootfs_mib: %s\n  size_mib: %s\n  label: lvmstorage\n' \
+			"$(SNO_LVMS_PARTITION_DEVICE)" \
+			"$(SNO_LVMS_ROOTFS_MIB)" \
+			"$(SNO_LVMS_SIZE_MIB)" >> $(PLAYBOOK_DIR)/vars.yaml; \
 	fi
 	@echo "✔ Generated $(PLAYBOOK_DIR)/vars.yaml"
 

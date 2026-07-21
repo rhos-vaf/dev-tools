@@ -16,6 +16,9 @@ spec:
     repoURL: https://github.com/openstack-k8s-operators/gitops.git
     targetRevision: HEAD
     path: example/dependencies
+    kustomize:
+      components:
+      - https://github.com/openstack-k8s-operators/gitops/components/argocd/annotations
   destination:
     server: https://kubernetes.default.svc
     namespace: openshift-gitops
@@ -31,4 +34,3 @@ echo "✔ ArgoCD Application created"
 echo ""
 echo "Monitor sync status:"
 echo "  oc get application openstack-dependencies -n openshift-gitops"
-echo "  argocd app get openstack-dependencies"

@@ -80,20 +80,18 @@ PLAYBOOK_DIR ?= $(OUTPUT_DIR)/playbooks
 # VALIDATION
 # ============================================================================
 
-define check_required_var
-	@if [ -z "$($(1))" ]; then \
-		echo "Error: $(1) is required but not set"; \
+.PHONY: check-var-%
+check-var-%:
+	@if [ -z "$($(*))" ]; then \
+		echo "Error: $* is required but not set"; \
 		exit 1; \
 	fi
-endef
 
 ##@ 1. Validate Configuration
 
 # Validate that all required configuration variables are set and BMC credentials exist
 .PHONY: validate_config
-validate_config: ensure_bmc_credentials_file ## Validate configuration before deployment
-	$(call check_required_var,SNO_BMC_HOST)
-	$(call check_required_var,SNO_NODE_MAC)
+validate_config: check-var-SNO_BMC_HOST check-var-SNO_NODE_MAC ensure_bmc_credentials_file ## Validate configuration before deployment
 	@if [ ! -f "$(PULL_SECRET)" ]; then \
 		echo "Error: Pull secret not found at $(PULL_SECRET)"; \
 		exit 1; \
@@ -356,14 +354,12 @@ show_kubeconfig: ## Display kubeconfig location and access instructions
 
 # Install LVM Storage Operator via OLM
 .PHONY: install_lvm_operator
-install_lvm_operator: ## Install LVM Storage Operator
-	$(call check_required_var,SNO_OPENSHIFT_VERSION)
+install_lvm_operator: check-var-SNO_OPENSHIFT_VERSION ## Install LVM Storage Operator
 	@bash scripts/install_lvm_operator.sh
 
 # Create LVMCluster with thin provisioning (requires SNO_LVM_DEVICES)
 .PHONY: create_lvm_cluster
-create_lvm_cluster: ## Create LVMCluster with thin provisioning
-	$(call check_required_var,SNO_LVM_DEVICES)
+create_lvm_cluster: check-var-SNO_LVM_DEVICES ## Create LVMCluster with thin provisioning
 	@bash scripts/create_lvm_cluster.sh
 
 # ============================================================================
@@ -451,12 +447,7 @@ clone_gitops_tools:
 
 # Configure Vault AppRole authentication for OpenStack namespace secret management
 .PHONY: configure_vault_authentication
-configure_vault_authentication: clone_gitops_tools ## Configure Vault AppRole authentication
-	@if [ -z "$(OPENSTACK_NAMESPACE)" ]; then \
-		echo "✗ Error: OPENSTACK_NAMESPACE not set"; \
-		echo "  Set it in your config file or via: make configure_vault_authentication OPENSTACK_NAMESPACE=rhoso1"; \
-		exit 1; \
-	fi
+configure_vault_authentication: check-var-OPENSTACK_NAMESPACE clone_gitops_tools ## Configure Vault AppRole authentication
 	@if [ -n "$(VAULT_APPROLE_ROLE_ID)" ] && [ -n "$(VAULT_APPROLE_SECRET_ID)" ]; then \
 		echo "→ Using AppRole credentials from environment variables..."; \
 		ROLE_ID="$(VAULT_APPROLE_ROLE_ID)"; \

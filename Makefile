@@ -47,6 +47,8 @@ BMC_CREDENTIALS_FILE ?=
 # LVM Storage Configuration
 SNO_LVM_DEVICES ?=
 SNO_LVM_DEVICE_CLASS ?= openstack
+SNO_LVM_CLUSTER_NAME ?= lvmcluster
+SNO_LVM_NAMESPACE ?= openshift-storage
 
 # GitOps Configuration
 GITOPS_REPO ?= https://github.com/openstack-k8s-operators/gitops.git
@@ -357,9 +359,9 @@ show_kubeconfig: ## Display kubeconfig location and access instructions
 install_lvm_operator: check-var-SNO_OPENSHIFT_VERSION ## Install LVM Storage Operator
 	@bash scripts/install_lvm_operator.sh
 
-# Create LVMCluster with thin provisioning (requires SNO_LVM_DEVICES)
-.PHONY: create_lvm_cluster
-create_lvm_cluster: check-var-SNO_LVM_DEVICES ## Create LVMCluster with thin provisioning
+# Configure LVMCluster device class with thin provisioning (requires SNO_LVM_DEVICES)
+.PHONY: configure_lvm_cluster
+configure_lvm_cluster: check-var-SNO_LVM_DEVICES ## Configure LVMCluster device class
 	@bash scripts/create_lvm_cluster.sh
 
 # ============================================================================

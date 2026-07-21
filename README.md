@@ -24,7 +24,7 @@ make deploy_sno       # Deploy SNO cluster
 ```bash
 # Install prerequisites
 make install_lvm_operator              # Install LVM Storage Operator
-make create_lvm_cluster                # Create LVMCluster for persistent volumes
+make configure_lvm_cluster             # Configure LVMCluster device class
 make install_gitops_operator           # OpenShift GitOps (ArgoCD)
 make enable_argocd                     # Enable ArgoCD with OpenStack health checks
 make configure_openshift_gitops        # Configure ArgoCD permissions and TLS

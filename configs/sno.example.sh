@@ -46,9 +46,11 @@ export SNO_MACHINE_NETWORK="192.168.10.0/24"
 # Node Hardware
 export SNO_ROOT_DEVICE="/dev/sda"              # Or /dev/nvme0n1, etc.
 
-# LVM Storage Configuration (optional - for post-install LVM Storage Operator)
-# export SNO_LVM_DEVICE="/dev/sdb"             # Disk for LVM Storage Operator
+# LVM Storage Configuration
+# export SNO_LVM_DEVICES="/dev/sdb /dev/sdc"   # Disk(s) for LVM Storage (space-separated)
 # export SNO_LVM_DEVICE_CLASS="openstack"      # StorageClass name will be: lvms-openstack
+# export SNO_LVM_CLUSTER_NAME="lvmcluster"     # LVMCluster resource name
+# export SNO_LVM_NAMESPACE="openshift-storage" # LVMCluster namespace
 
 # Secrets Paths
 export PULL_SECRET="/path/to/pull-secret"

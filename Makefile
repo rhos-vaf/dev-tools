@@ -362,7 +362,7 @@ install_lvm_operator: check-var-SNO_OPENSHIFT_VERSION ## Install LVM Storage Ope
 # Configure LVMCluster device class with thin provisioning (requires SNO_LVM_DEVICES)
 .PHONY: configure_lvm_cluster
 configure_lvm_cluster: check-var-SNO_LVM_DEVICES ## Configure LVMCluster device class
-	@bash scripts/create_lvm_cluster.sh
+	@bash scripts/configure_lvm_cluster.sh
 
 # ============================================================================
 # GITOPS OPERATOR

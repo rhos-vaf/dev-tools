@@ -45,7 +45,7 @@ PULL_SECRET ?=
 BMC_CREDENTIALS_FILE ?=
 
 # LVM Storage Configuration
-SNO_LVM_DEVICE ?=
+SNO_LVM_DEVICES ?=
 SNO_LVM_DEVICE_CLASS ?= openstack
 
 # GitOps Configuration
@@ -354,10 +354,17 @@ show_kubeconfig: ## Display kubeconfig location and access instructions
 
 ##@ 3. Deploy RHOSO
 
-# Install LVM Storage Operator and create LVMCluster with thin provisioning
+# Install LVM Storage Operator via OLM
 .PHONY: install_lvm_operator
-install_lvm_operator: ## Install LVM Storage Operator and configure LVM device
+install_lvm_operator: ## Install LVM Storage Operator
+	$(call check_required_var,SNO_OPENSHIFT_VERSION)
 	@bash scripts/install_lvm_operator.sh
+
+# Create LVMCluster with thin provisioning (requires SNO_LVM_DEVICES)
+.PHONY: create_lvm_cluster
+create_lvm_cluster: ## Create LVMCluster with thin provisioning
+	$(call check_required_var,SNO_LVM_DEVICES)
+	@bash scripts/create_lvm_cluster.sh
 
 # ============================================================================
 # GITOPS OPERATOR

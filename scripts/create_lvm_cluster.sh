@@ -25,23 +25,23 @@ cat << EOF | oc apply -f -
 apiVersion: lvm.topolvm.io/v1alpha1
 kind: LVMCluster
 metadata:
-  name: lvmcluster
+  name: lvmcluster-${SNO_LVM_DEVICE_CLASS}
   namespace: openshift-storage
 spec:
   storage:
     deviceClasses:
     - name: ${SNO_LVM_DEVICE_CLASS}
       thinPoolConfig:
-        name: thin-pool-1
+        name: thin-pool-${SNO_LVM_DEVICE_CLASS}
         sizePercent: 90
         overprovisionRatio: 10
       deviceSelector:
-        paths:
+        optionalPaths:
 ${DEVICE_PATHS}
 EOF
 
 echo "Waiting for LVMCluster to be ready..."
-until oc get lvmcluster lvmcluster -n openshift-storage -o jsonpath='{.status.ready}' 2>/dev/null | grep -q true; do
+until oc get lvmcluster lvmcluster-${SNO_LVM_DEVICE_CLASS} -n openshift-storage -o jsonpath='{.status.ready}' 2>/dev/null | grep -q true; do
     echo "Waiting for LVMCluster to become ready..."
     sleep 10
 done

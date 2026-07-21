@@ -433,6 +433,11 @@ deploy_openstack_operator_cr: clone_gitops ## Deploy OpenStack operator CR to bo
 deploy_vault_secrets_operator: clone_gitops ## Deploy Vault Secrets Operator
 	@bash scripts/deploy_vault_secrets_operator.sh
 
+# Deploy External Secrets Operator via ArgoCD for secret management
+.PHONY: deploy_eso_secrets_operator
+deploy_eso_secrets_operator: clone_gitops ## Deploy External Secrets Operator
+	@bash scripts/deploy_eso_secrets_operator.sh
+
 # ============================================================================
 # OPENSTACK VAULT INTEGRATION
 # ============================================================================

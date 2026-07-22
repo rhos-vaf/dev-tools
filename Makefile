@@ -433,6 +433,11 @@ deploy_openstack_operator_cr: clone_gitops ## Deploy OpenStack operator CR to bo
 deploy_vault_secrets_operator: clone_gitops ## Deploy Vault Secrets Operator
 	@bash scripts/deploy_vault_secrets_operator.sh
 
+# Deploy External Secrets Operator via ArgoCD for secret management
+.PHONY: deploy_eso_secrets_operator
+deploy_eso_secrets_operator: clone_gitops ## Deploy External Secrets Operator
+	@bash scripts/deploy_eso_secrets_operator.sh
+
 # ============================================================================
 # OPENSTACK VAULT INTEGRATION
 # ============================================================================
@@ -470,6 +475,30 @@ configure_vault_authentication: check-var-OPENSTACK_NAMESPACE clone_gitops_tools
 		APPROLE_ROLE_ID=$$ROLE_ID \
 		APPROLE_SECRET_ID=$$SECRET_ID
 	@echo "✔ Vault AppRole authentication configured for namespace: $(OPENSTACK_NAMESPACE)"
+
+# Configure ESO SecretStore with Vault AppRole authentication for OpenStack namespace
+.PHONY: configure_eso_authentication
+configure_eso_authentication: check-var-OPENSTACK_NAMESPACE clone_gitops_tools ## Configure ESO SecretStore with Vault AppRole authentication
+	@if [ -n "$(VAULT_APPROLE_ROLE_ID)" ] && [ -n "$(VAULT_APPROLE_SECRET_ID)" ]; then \
+		echo "→ Using AppRole credentials from environment variables..."; \
+		ROLE_ID="$(VAULT_APPROLE_ROLE_ID)"; \
+		SECRET_ID="$(VAULT_APPROLE_SECRET_ID)"; \
+	elif [ -n "$(VAULT_APPROLE_PATH)" ] && command -v vault >/dev/null 2>&1; then \
+		echo "→ Fetching AppRole credentials from Vault path: $(VAULT_APPROLE_PATH)..."; \
+		ROLE_ID=$$(vault kv get -field=role_id $(VAULT_APPROLE_PATH)) || (echo "✗ Failed to fetch role_id from Vault" && exit 1); \
+		SECRET_ID=$$(vault kv get -field=secret_id $(VAULT_APPROLE_PATH)) || (echo "✗ Failed to fetch secret_id from Vault" && exit 1); \
+	else \
+		echo "✗ Error: AppRole credentials not provided"; \
+		echo "  Option 1: Set VAULT_APPROLE_ROLE_ID and VAULT_APPROLE_SECRET_ID"; \
+		echo "  Option 2: Set VAULT_APPROLE_PATH and ensure vault CLI is available"; \
+		exit 1; \
+	fi; \
+	echo "→ Configuring ESO SecretStore for namespace: $(OPENSTACK_NAMESPACE)..."; \
+	$(MAKE) -C $(GITOPS_TOOLS_DIR) setup_eso \
+		NAMESPACE=$(OPENSTACK_NAMESPACE) \
+		APPROLE_ROLE_ID=$$ROLE_ID \
+		APPROLE_SECRET_ID=$$SECRET_ID
+	@echo "✔ ESO SecretStore configured for namespace: $(OPENSTACK_NAMESPACE)"
 
 # ============================================================================
 # UTILITY

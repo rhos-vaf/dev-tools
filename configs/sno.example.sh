@@ -74,6 +74,9 @@ export BMC_CREDENTIALS_FILE="/path/to/idrac_access.yaml"
 # Alternative: Use specific release image instead of version
 # export SNO_RELEASE_IMAGE="quay.io/openshift-release-dev/ocp-release:4.18.3-x86_64"
 
+# Workstation IP reachable from the target node (serves the ISO via HTTP)
+# export SNO_CONTROLLER_IP=""
+
 # ISO HTTP server port
 # export SNO_ISO_HTTP_PORT="80"
 
@@ -94,19 +97,6 @@ export BMC_CREDENTIALS_FILE="/path/to/idrac_access.yaml"
 
 # Disable specific network interfaces during install
 # export SNO_DISABLED_IFACES="ens1f0,ens1f1"
-
-# ============================================================================
-# ENVIRONMENT PRESETS (uncomment one if applicable)
-# ============================================================================
-
-# # Lab Environment Example
-# export SNO_BASE_DOMAIN="lab.example.com"
-# export SNO_MACHINE_NETWORK="192.168.10.0/24"
-
-# # Development Environment
-# export SNO_CLUSTER_NAME="ocp-dev"
-# export SNO_BASE_DOMAIN="dev.example.com"
-# export SNO_LIVE_DEBUG="true"
 
 # ============================================================================
 # POST-SOURCE MESSAGE

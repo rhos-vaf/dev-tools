@@ -39,6 +39,7 @@ SNO_INSTALLER_TIMEOUT ?=
 SNO_ENABLE_USB_BOOT ?=
 SNO_VMEDIA_UEFI_PATH ?=
 SNO_CORE_PASSWORD ?=
+SNO_SSH_PUBKEY ?=
 SNO_LIVE_DEBUG ?=
 SNO_DISABLED_IFACES ?=
 PULL_SECRET ?=
@@ -275,6 +276,9 @@ generate_vars_file:
 	fi
 	@if [ -n "$(SNO_CORE_PASSWORD)" ]; then \
 		echo "cifmw_bm_agent_core_password: $(SNO_CORE_PASSWORD)" >> $(PLAYBOOK_DIR)/vars.yaml; \
+	fi
+	@if [ -n "$(SNO_SSH_PUBKEY)" ]; then \
+		echo "cifmw_bm_agent_ssh_pubkey: '$(SNO_SSH_PUBKEY)'" >> $(PLAYBOOK_DIR)/vars.yaml; \
 	fi
 	@if [ -n "$(SNO_DISABLED_IFACES)" ]; then \
 		echo "cifmw_bm_agent_disabled_ifaces: $(SNO_DISABLED_IFACES)" >> $(PLAYBOOK_DIR)/vars.yaml; \

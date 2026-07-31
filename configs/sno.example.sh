@@ -93,6 +93,9 @@ export BMC_CREDENTIALS_FILE="/path/to/idrac_access.yaml"
 # Set core user password (post-install)
 # export SNO_CORE_PASSWORD="your_password"
 
+# Add SSH public key to core user (post-install)
+# export SNO_SSH_PUBKEY="ssh-ed25519 AAAA..."
+
 # Enable debug mode during installation
 # export SNO_LIVE_DEBUG="true"
 

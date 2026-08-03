@@ -34,9 +34,11 @@ make deploy_openstack_dependencies     # Cert-manager, MetalLB, NMState
 make deploy_openstack_operator         # OpenStack operator
 make deploy_openstack_operator_cr      # OpenStack operator CR (bootstrap services)
 make deploy_vault_secrets_operator     # Vault Secrets Operator
+make deploy_eso_secrets_operator       # External Secrets Operator
 
-# Configure Vault authentication
-make configure_vault_authentication    # AppRole for OpenStack namespace
+# Configure secrets authentication
+make configure_vault_authentication    # Vault AppRole authentication
+make configure_eso_authentication      # ESO SecretStore with Vault AppRole authentication
 ```
 
 ## Configuration

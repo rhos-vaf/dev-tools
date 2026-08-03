@@ -435,7 +435,7 @@ deploy_vault_secrets_operator: clone_gitops ## Deploy Vault Secrets Operator
 
 # Deploy External Secrets Operator via ArgoCD for secret management
 .PHONY: deploy_eso_secrets_operator
-deploy_eso_secrets_operator: clone_gitops ## Deploy External Secrets Operator
+deploy_eso_secrets_operator: clone_gitops ## Deploy External Secrets Operator (Recommended)
 	@bash scripts/deploy_eso_secrets_operator.sh
 
 # ============================================================================
@@ -478,7 +478,7 @@ configure_vault_authentication: check-var-OPENSTACK_NAMESPACE clone_gitops_tools
 
 # Configure ESO SecretStore with Vault AppRole authentication for OpenStack namespace
 .PHONY: configure_eso_authentication
-configure_eso_authentication: check-var-OPENSTACK_NAMESPACE clone_gitops_tools ## Configure ESO SecretStore with Vault AppRole authentication
+configure_eso_authentication: check-var-OPENSTACK_NAMESPACE clone_gitops_tools ## Configure ESO SecretStore with Vault AppRole authentication (Recommended)
 	@if [ -n "$(VAULT_APPROLE_ROLE_ID)" ] && [ -n "$(VAULT_APPROLE_SECRET_ID)" ]; then \
 		echo "→ Using AppRole credentials from environment variables..."; \
 		ROLE_ID="$(VAULT_APPROLE_ROLE_ID)"; \

@@ -83,11 +83,12 @@ export BMC_CREDENTIALS_FILE="/path/to/idrac_access.yaml"
 # Installation timeout (in seconds)
 # export SNO_INSTALLER_TIMEOUT="7200"
 
-# Enable USB boot in BIOS (if VirtualMedia needs it)
+# Enable GenericUsbBoot in BIOS via Redfish (requires SNO_VMEDIA_UEFI_PATH below)
 # export SNO_ENABLE_USB_BOOT="true"
 
-# Manually specify UEFI device path for VirtualMedia
-# export SNO_VMEDIA_UEFI_PATH="PciRoot(0x0)/Pci(0x14,0x0)/USB(0x13,0x0)"
+# UEFI device path for VirtualMedia boot (required when SNO_ENABLE_USB_BOOT=true)
+# Find it in iDRAC UEFI boot options as "Virtual Optical Drive" or "Generic USB Boot"
+# export SNO_VMEDIA_UEFI_PATH=""
 
 # Set core user password (post-install)
 # export SNO_CORE_PASSWORD="your_password"

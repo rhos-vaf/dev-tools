@@ -33,10 +33,12 @@ make configure_openshift_gitops        # Configure ArgoCD permissions and TLS
 make deploy_openstack_dependencies     # Cert-manager, MetalLB, NMState
 make deploy_openstack_operator         # OpenStack operator
 make deploy_openstack_operator_cr      # OpenStack operator CR (bootstrap services)
+make deploy_eso_secrets_operator       # External Secrets Operator (Recommended)
 make deploy_vault_secrets_operator     # Vault Secrets Operator
 
-# Configure Vault authentication
-make configure_vault_authentication    # AppRole for OpenStack namespace
+# Configure secrets authentication
+make configure_eso_authentication      # ESO SecretStore with Vault AppRole authentication (Recommended)
+make configure_vault_authentication    # Vault AppRole authentication
 ```
 
 ## Configuration

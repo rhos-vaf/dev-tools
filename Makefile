@@ -124,7 +124,7 @@ show_config: ## Display current configuration
 	@echo "Node Configuration:"
 	@echo "  * IP Address:        $(SNO_NODE_IP)"
 	@echo "  * MAC Address:       $(SNO_NODE_MAC)"
-	@echo "    Network Interface: $(SNO_NODE_IFACE)"
+	@echo "  * Network Interface: $(SNO_NODE_IFACE)"
 	@echo "  * Machine Network:   $(SNO_MACHINE_NETWORK)"
 	@echo "    Root Device:       $(SNO_ROOT_DEVICE)"
 	@echo ""

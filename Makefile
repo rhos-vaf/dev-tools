@@ -1,5 +1,12 @@
-# Makefile for SNO (Single Node OpenShift) Installation
-# Uses ci-framework bm_sno role from https://github.com/openstack-k8s-operators/ci-framework
+# Makefile for SNO (Single Node OpenShift) and RHOSO deployment.
+#
+# This is a wrapper of:
+#   - SNO cluster provisioning     - uses the bm_sno role from
+#                                    https://github.com/openstack-k8s-operators/ci-framework
+#   - RHOSO deployment via GitOps  - uses
+#                                    https://github.com/openstack-k8s-operators/gitops.git
+#   - Secrets management (ESO/Vault) - uses
+#                                    https://github.com/rhos-vaf/gitops-tools.git
 
 # ============================================================================
 # CONFIGURATION FILES

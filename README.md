@@ -2,6 +2,15 @@
 
 Automated deployment toolkit for Single Node OpenShift (SNO) and Red Hat OpenStack Services on OpenShift (RHOSO).
 
+This is a wrapper of:
+
+- **SNO cluster provisioning** — uses the `bm_sno` role from
+  [ci-framework](https://github.com/openstack-k8s-operators/ci-framework).
+- **RHOSO deployment via GitOps** — uses
+  [gitops](https://github.com/openstack-k8s-operators/gitops.git).
+- **Secrets management (ESO / Vault)** — uses
+  [gitops-tools](https://github.com/rhos-vaf/gitops-tools.git).
+
 ## Quick Start
 
 ### 1. Configure Deployment

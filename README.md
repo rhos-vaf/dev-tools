@@ -57,3 +57,7 @@ See `configs/sno.example.sh` for all available options.
 ## Documentation
 
 Run `make help` for full command reference.
+
+## Troubleshooting
+
+See [troubleshooting.md](troubleshooting.md) for known issues and workarounds.
